@@ -22,14 +22,32 @@ namespace TEST_CSC_API.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        public string AuthRevoke()
+        [HttpPost]
+        public string AuthRevoke(InputAuthRevoke inputAuthRevoke)
         {
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
             AuthRevokeClient authRevokeClient = new AuthRevokeClient(serializer, errorLogger, baseURL);
-            object response = authRevokeClient.GetAuthRevoke("6445f209-d5fd-4fa1-aceb-2e1f556f2840");
+
+            Microsoft.Extensions.Primitives.StringValues value;
+            string access_token = "";
+            if (Request.Headers.TryGetValue("Authorization", out value))
+            {
+                access_token = value.ToString().Replace("Bearer ", "");
+            }
+            else
+            {
+                OutputError error = new OutputError()
+                {
+                    error = "invalid_access_token",
+                    error_description = "Invalid access_token"
+                };
+                return serializer.Serialize(error);
+            }
+
+
+            object response = authRevokeClient.GetAuthRevoke(access_token, inputAuthRevoke);
 
             return serializer.Serialize(response);
         }
@@ -42,14 +60,8 @@ namespace TEST_CSC_API.Controllers
         { }
 
 
-        public object GetAuthRevoke(string access_token)
+        public object GetAuthRevoke(string access_token, InputAuthRevoke inputAuthRevoke)
         {
-            InputAuthRevoke inputAuthRevoke = new InputAuthRevoke()
-            {
-                clientData = "",
-                token = access_token
-            };
-
             RestRequest request = new RestRequest("auth/revoke", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
             JsonSerializer serializer = new JsonSerializer();

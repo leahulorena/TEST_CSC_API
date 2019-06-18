@@ -23,14 +23,14 @@ namespace TEST_CSC_API.Controllers
         }
 
 
-        [HttpGet]
-        public string Get()
+        [HttpPost]
+        public string Get(InputInfo inputInfo)
         {
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
             InfoClient info = new InfoClient(serializer, errorLogger, baseURL);
-            object output = info.GetInfo();
+            object output = info.GetInfo(inputInfo);
 
             string returnedData = serializer.Serialize(output);
             return returnedData;
@@ -43,11 +43,10 @@ namespace TEST_CSC_API.Controllers
            base(serializer, errorLogger, baseURL)
         { }
 
-        public OutputInfo GetInfo()
+        public OutputInfo GetInfo(InputInfo inputInfo)
         {
             RestRequest request = new RestRequest("info", Method.POST);
-
-            InputInfo inputInfo = new InputInfo() { lang = "en-US" };
+            
             JsonSerializer jsonSerializer = new JsonSerializer();
             string inputInfoArguments = jsonSerializer.Serialize(inputInfo);
 

@@ -36,9 +36,7 @@ namespace TEST_CSC_API.Controllers
         [HttpPost]
         public string OAuthToken()
         {
-            //return "post on oauth";
-            //test
-            //nu gaseste calea sa scrie in log
+            //ar trebui sa citesc parametrii pentru oauth din fisierul de configurare sau sa ii primesc ca parametru?
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
 

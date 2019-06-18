@@ -200,7 +200,7 @@ namespace TEST_CSC_API
     [DataContract]
     public class InputCredentialsList
     {
-        //The user identifier associated to the user identit
+        //The user identifier associated to the user identity
         [DataMember]
         public string userID { get; set; }
 
@@ -581,9 +581,6 @@ namespace TEST_CSC_API
     [DataContract]
     public class OutputError
     {
-        [DataMember]
-        public string error_code { get; set; }
-
         [DataMember]
         public string error { get; set; }
 

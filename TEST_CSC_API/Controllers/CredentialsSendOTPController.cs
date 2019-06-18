@@ -22,15 +22,33 @@ namespace TEST_CSC_API.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        public string SendOTP(string id)
+        [HttpPost]
+        public string SendOTP(InputCredentialsSendOTP inputCredentialsSendOTP)
         {
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
 
             CredentialsSendOTPClient sendOTPClient = new CredentialsSendOTPClient(serializer, errorLogger, baseURL);
-            object response = sendOTPClient.GetCredentialsSendOTP("9508861a-4a19-4e8a-8f4a-6cd78c861366", "863971CBC7BF63D49C9F14809FD5A1142B75E9AB");
+
+            Microsoft.Extensions.Primitives.StringValues value;
+            string access_token = "";
+            if (Request.Headers.TryGetValue("Authorization", out value))
+            {
+                access_token = value.ToString().Replace("Bearer ", "");
+            }
+            else
+            {
+                OutputError error = new OutputError()
+                {
+                    error = "invalid_access_token",
+                    error_description = "Invalid access_token"
+                };
+                return serializer.Serialize(error);
+            }
+
+
+            object response = sendOTPClient.GetCredentialsSendOTP(access_token, inputCredentialsSendOTP);
 
             return serializer.Serialize(response);
         }
@@ -42,19 +60,14 @@ namespace TEST_CSC_API.Controllers
             base(serializer, errorLogger, baseURL)
         { }
 
-        public object GetCredentialsSendOTP (string access_token, string credentialID)
+        public object GetCredentialsSendOTP (string access_token, InputCredentialsSendOTP inputCredentialsSendOTP)
         {
-            InputCredentialsSendOTP sendOTP = new InputCredentialsSendOTP()
-            {
-                clientData = "",
-                credentialID = credentialID
-            };
-
+           
             RestRequest request = new RestRequest("credentials/sendOTP", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
 
             JsonSerializer serializer = new JsonSerializer();
-            var postData = serializer.Serialize(sendOTP);
+            var postData = serializer.Serialize(inputCredentialsSendOTP);
             request.AddJsonBody(postData);
 
             IRestResponse response = Execute(request);

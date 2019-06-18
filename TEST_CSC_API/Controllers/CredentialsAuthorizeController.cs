@@ -22,8 +22,8 @@ namespace TEST_CSC_API.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        public string GetCredentialsAuthorize()
+        [HttpPost]
+        public string GetCredentialsAuthorize(InputCredentialsAuthorize inputCredentialsAuthorize)
         {
 
             JsonSerializer serializer = new JsonSerializer();
@@ -32,7 +32,23 @@ namespace TEST_CSC_API.Controllers
 
             CredentialsAuthorizeClient credentialsAuthorizeClient = new CredentialsAuthorizeClient(serializer, errorLogger, baseURL);
 
-            object response = credentialsAuthorizeClient.GetCredentialsAuthorize("863971CBC7BF63D49C9F14809FD5A1142B75E9AB", 1, "9508861a-4a19-4e8a-8f4a-6cd78c861366", "ysijd6", "L0r3n@L3@hu***");
+            Microsoft.Extensions.Primitives.StringValues value;
+            string access_token = "";
+            if (Request.Headers.TryGetValue("Authorization", out value))
+            {
+                access_token = value.ToString().Replace("Bearer ", "");
+            }
+            else
+            {
+                OutputError error = new OutputError()
+                {
+                    error = "invalid_access_token",
+                    error_description = "Invalid access_token"
+                };
+                return serializer.Serialize(error);
+            }
+
+            object response = credentialsAuthorizeClient.GetCredentialsAuthorize(access_token, inputCredentialsAuthorize);
             return serializer.Serialize(response);
         }
 
@@ -44,30 +60,15 @@ namespace TEST_CSC_API.Controllers
             base(serializer, errorLogger, baseURL)
         { }
 
-        public object GetCredentialsAuthorize(string id, int numSignatures, string access_token, string otp, string pin)
+        public object GetCredentialsAuthorize(string access_token, InputCredentialsAuthorize inputCredentialsAuthorize)
         {
-            byte[] bytes = Encoding.GetBytes("text to hash");
-            SHA256Managed hashstring = new SHA256Managed();
-            byte[] hash = hashstring.ComputeHash(bytes);
-            string hashBase64 = Convert.ToBase64String(hash);
-            string[] hashToSign = new string[] { hashBase64 };
-
-            InputCredentialsAuthorize credentialsAuthorize = new InputCredentialsAuthorize()
-            {
-                clientData = "",
-                credentialID = id,
-                description = "",
-                numSignatures = numSignatures,
-                OTP = otp,
-                PIN = pin,
-                hash = hashToSign,
-            };
-
+            
+            
             RestRequest request = new RestRequest("credentials/authorize", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
 
             JsonSerializer serializer = new JsonSerializer();
-            var postData = serializer.Serialize(credentialsAuthorize);
+            var postData = serializer.Serialize(inputCredentialsAuthorize);
             request.AddJsonBody(postData);
 
             IRestResponse response = Execute(request);

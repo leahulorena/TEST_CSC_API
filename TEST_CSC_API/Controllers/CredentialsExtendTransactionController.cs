@@ -23,26 +23,32 @@ namespace TEST_CSC_API.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        public string ExtendTransaction()
+        [HttpPost]
+        public string ExtendTransaction(InputCredentialsExtendTransaction inputCredentialsExtend)
         {
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
 
-
-            byte[] bytes = Encoding.UTF8.GetBytes("text to hash");
-            SHA256Managed hashstring = new SHA256Managed();
-            byte[] hash = hashstring.ComputeHash(bytes);
-            string hashBase64 = Convert.ToBase64String(hash);
-
-            string access_token = "1f65bd03-3568-4968-85e1-754cb1c9ede4";
-            string sad = "MIHaDChhdC5ndi5lZ2l6LmJrdS5zZXJ2ZXIuY3J5cHRvLldyYXBwZWREYXRhMIGtDBRBRVMvQ0JDL1BLQ1M1UGFkZGluZwQSBBCgbogrlYqBrdmyOOygn9dbBIGAelxl1Mp01lLbSoECzqpjd5BDWqsaFgjKPGOmuUPAET0WT8YDo1wgzSw7thzuVEvaeS4+oCgIks7W29uwKq1tVTKwlV2P1dPC9r/vvTMvBiWS63CWL15aP+t8L1ywZhXIiAzJTG/AdqflnN2mrCRGyNF7BPpIMizf1fZPUYryVPI=";
-            string credentialsID = "863971CBC7BF63D49C9F14809FD5A1142B75E9AB";
+            Microsoft.Extensions.Primitives.StringValues value;
+            string access_token = "";
+            if (Request.Headers.TryGetValue("Authorization", out value))
+            {
+                access_token = value.ToString().Replace("Bearer ", "");
+            }
+            else
+            {
+                OutputError error = new OutputError()
+                {
+                    error = "invalid_access_token",
+                    error_description = "Invalid access_token"
+                };
+                return serializer.Serialize(error);
+            }
 
 
             ExtendTransactionClient extendTransactionClient = new ExtendTransactionClient(serializer, errorLogger, baseURL);
-            object response = extendTransactionClient.GetExtendTransaction(access_token, credentialsID, sad, hashBase64);
+            object response = extendTransactionClient.GetExtendTransaction(access_token, inputCredentialsExtend);
 
             return serializer.Serialize(response);
 
@@ -55,16 +61,9 @@ namespace TEST_CSC_API.Controllers
             base(serializer, errorLogger, baseURL)
         { }
 
-        public object GetExtendTransaction(string access_token, string credentialID, string sad, string hash)
+        public object GetExtendTransaction(string access_token, InputCredentialsExtendTransaction inputCredentialsExtend)
         {
-            InputCredentialsExtendTransaction inputCredentialsExtend = new InputCredentialsExtendTransaction()
-            {
-                clientData = "",
-                credentialID = credentialID,
-                hash = hash,
-                SAD = sad
-            };
-
+           
             RestRequest request = new RestRequest("credentials/extendTransaction", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
             JsonSerializer serializer = new JsonSerializer();

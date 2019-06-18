@@ -22,15 +22,31 @@ namespace TEST_CSC_API.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        public string CredentialsInfo(string id)
+        [HttpPost]
+        public string CredentialsInfo(InputCredentialsInfo inputCredentialsInfo)
         {
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
 
+            Microsoft.Extensions.Primitives.StringValues value;
+            string access_token = "";
+            if (Request.Headers.TryGetValue("Authorization", out value))
+            {
+                access_token = value.ToString().Replace("Bearer ", "");
+            }
+            else
+            {
+                OutputError error = new OutputError()
+                {
+                    error = "invalid_access_token",
+                    error_description = "Invalid access_token"
+                };
+                return serializer.Serialize(error);
+            }
+
             CredentialsInfoClient credentialsInfoClient = new CredentialsInfoClient(serializer, errorLogger, baseURL);
-            object response = credentialsInfoClient.GetCredentialsInfo("5dea55c2-13bc-429a-bf5b-2127740395c1", "863971CBC7BF63D49C9F14809FD5A1142B75E9AB");
+            object response = credentialsInfoClient.GetCredentialsInfo(access_token, inputCredentialsInfo);
 
             return serializer.Serialize(response);
         }
@@ -44,20 +60,15 @@ namespace TEST_CSC_API.Controllers
             base(serializer, errorLogger, baseURL)
         { }
 
-        public object GetCredentialsInfo(string access_token, string id)
+        public object GetCredentialsInfo(string access_token, InputCredentialsInfo inputCredentialsInfo)
         {
-            InputCredentialsInfo credentialsInfo = new InputCredentialsInfo()
-            {
-                credentialID = id,
-                certInfo = true
-            };
-
+            
             RestRequest request = new RestRequest("credentials/info", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
 
             JsonSerializer serializer = new JsonSerializer();
-            //var postData = serializer.Serialize(credentialsInfo);
-            var postData = "{ \"credentialID\": \"" + id + "\",\"certInfo\": \"true\"}";
+            var postData = serializer.Serialize(inputCredentialsInfo);
+           // var postData = "{ \"credentialID\": \"" + credentialsID + "\",\"certInfo\": \"true\"}";
             request.AddJsonBody(postData);
 
             IRestResponse response = Execute(request);

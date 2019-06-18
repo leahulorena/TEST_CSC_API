@@ -23,15 +23,30 @@ namespace TEST_CSC_API.Controllers
         }
 
 
-        [HttpGet]
-        public string CredentialsList()
+        [HttpPost]
+        public string CredentialsList(InputCredentialsList inputCredentialsList)
         {
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
 
             CredentialsListClient credentialsListClient = new CredentialsListClient(serializer, errorLogger, baseURL);
-            object response = credentialsListClient.GetCredentialsList("6445f209-d5fd-4fa1-aceb-2e1f556f2840");
+            Microsoft.Extensions.Primitives.StringValues value;
+            string access_token = "";
+            if (Request.Headers.TryGetValue("Authorization", out value))
+            {
+                access_token = value.ToString().Replace("Bearer ", "");
+            }
+            else
+            {
+                OutputError error = new OutputError()
+                {
+                    error = "invalid_access_token",
+                    error_description = "Invalid access_token"
+                };
+                return serializer.Serialize(error);
+            }
+            object response = credentialsListClient.GetCredentialsList(access_token, inputCredentialsList);
             return serializer.Serialize(response);
         }
 
@@ -43,20 +58,12 @@ namespace TEST_CSC_API.Controllers
            base(serializer, errorLogger, baseURL)
         { }
 
-        public object GetCredentialsList(string access_token)
+        public object GetCredentialsList(string access_token, InputCredentialsList inputCredentialsList)
         {
-            InputCredentialsList credentialsList = new InputCredentialsList()
-            {
-                clientData = "",
-                maxResults = "",
-                pageToken = "",
-                userID = ""
-            };
-
             RestRequest request = new RestRequest("credentials/list", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
             JsonSerializer serializer = new JsonSerializer();
-            var postData = "{}";
+            var postData = serializer.Serialize(inputCredentialsList);
             request.AddJsonBody(postData);
 
             IRestResponse response = Execute(request);
