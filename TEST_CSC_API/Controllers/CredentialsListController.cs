@@ -16,7 +16,6 @@ namespace TEST_CSC_API.Controllers
     {
         IConfiguration _configuration;
 
-
         public CredentialsListController(IConfiguration configuration)
         {
             _configuration = configuration;

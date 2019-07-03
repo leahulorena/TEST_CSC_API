@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace TEST_CSC_API
@@ -15,18 +16,24 @@ namespace TEST_CSC_API
     {
         public void LogError(Exception ex, string infoMessage)
         {
-            string absolutePath = @"..\..\Logs\";
+            string absolutePath = @"Logs/";
             string logFileName = "CSC_API_" + DateTime.Now.Day + "." + DateTime.Now.Month + "." + DateTime.Now.Year + ".txt";
 
             string path = absolutePath + logFileName;
 
             if (!File.Exists(path))
             {
-                File.Create(path);
-                using (var streamWriter = new StreamWriter(path, true))
+                string message = (DateTime.Now + " " + (ex.Message ==null?"":ex.Message) + " " + (ex.InnerException==null?"":ex.InnerException.Message) + " " + infoMessage);
+                using (var streamWriter = File.Create(path))
                 {
-                    streamWriter.WriteLine(DateTime.Now + " " + ex.Message + " " + ex.InnerException.Message + " " + infoMessage);
+                    byte[] info = new UTF8Encoding(true).GetBytes(message);
+                    streamWriter.Write(info, 0, info.Length);
                 }
+                
+                //using (var streamWriter = new StreamWriter(path))
+                //{
+                //    streamWriter.WriteLine(DateTime.Now + " " + ex.Message + " " + ex.InnerException.Message + " " + infoMessage);
+                //}
             }
             else if (File.Exists(path))
             {

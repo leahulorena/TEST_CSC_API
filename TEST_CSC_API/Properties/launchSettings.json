@@ -12,7 +12,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "api/oauth2",
+      "launchUrl": "api/info",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -20,7 +20,7 @@
     "TEST_CSC_API": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "api/oauth2",
+      "launchUrl": "api/info",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

@@ -22,7 +22,7 @@ namespace TEST_CSC_API
             _serializer = new Newtonsoft.Json.JsonSerializer
             {
                 MissingMemberHandling = MissingMemberHandling.Ignore,
-                NullValueHandling = NullValueHandling.Include,
+                NullValueHandling = NullValueHandling.Ignore,
                 DefaultValueHandling = DefaultValueHandling.Include,
                 DateFormatHandling = DateFormatHandling.IsoDateFormat,
                 DateTimeZoneHandling = DateTimeZoneHandling.Unspecified
@@ -59,6 +59,17 @@ namespace TEST_CSC_API
             using (var stringReader = new StringReader(content))
             {
                 using (var jsonTextReader = new JsonTextReader(stringReader))
+                {
+                    return _serializer.Deserialize<T>(jsonTextReader);
+                }
+            }
+        }
+
+        public T Deserialize<T>(string response)
+        {
+            using(var stringReader = new StringReader(response))
+            {
+                using(var jsonTextReader  =new JsonTextReader(stringReader))
                 {
                     return _serializer.Deserialize<T>(jsonTextReader);
                 }

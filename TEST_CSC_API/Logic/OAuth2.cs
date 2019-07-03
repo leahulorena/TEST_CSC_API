@@ -1,47 +1,29 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Win32;
-using RestSharp.Deserializers;
 using RestSharp;
-using TEST_CSC_API.Logic;
+using RestSharp.Deserializers;
 
-namespace TEST_CSC_API.Controllers
+
+namespace TEST_CSC_API.Logic
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class OAuth2Controller : ControllerBase
+    public class OAuth2
     {
-
         IConfiguration _configuration;
 
-        public OAuth2Controller(IConfiguration configuration)
+        public OAuth2(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-
-        [HttpGet]
-        public IActionResult Login(string returnUrl = "/")
-        {
-            return Challenge(new AuthenticationProperties() { RedirectUri = returnUrl });
-        }
-
-        [HttpPost]
-        public string OAuthToken()
+        public string OAuthToken(string code)
         {
             //ar trebui sa citesc parametrii pentru oauth din fisierul de configurare sau sa ii primesc ca parametru?
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
 
-            string code = _configuration.GetSection("Transsped").GetSection("Code").Value;
             string client_id = _configuration.GetSection("Transsped").GetSection("ClientID").Value;
             string client_secret = _configuration.GetSection("Transsped").GetSection("ClientSecret").Value;
             string redirect_uri = _configuration.GetSection("Transsped").GetSection("RedirectURL").Value;
@@ -65,9 +47,7 @@ namespace TEST_CSC_API.Controllers
 
             return serializer.Serialize(output);
         }
-
     }
-
 
     public class OAuth2Client : BaseClient
     {

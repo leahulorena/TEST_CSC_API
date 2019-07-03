@@ -56,6 +56,7 @@ namespace TEST_CSC_API
                 options.AuthorizationEndpoint = Configuration["Transsped:AuthURL"];
                 options.TokenEndpoint = Configuration["Transsped:TokenURL"];
                 options.CallbackPath = new PathString("/redirect");                
+                //options.CallbackPath = new PathString("/oauth2");
 
                 options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
                 {
@@ -73,8 +74,8 @@ namespace TEST_CSC_API
                         context.RunClaimActions(user);
                     }
                 };
-            });
-
+            });          
+ 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

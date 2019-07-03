@@ -378,6 +378,56 @@ namespace TEST_CSC_API
         public string clientData { get; set; }
     }
 
+
+
+
+    /*--------------------------------------------Objects for advanced signatures------------------------------------*/
+    [DataContract]
+    public class InputSignaturesSignPDF
+    {
+        //The identifier associated to the credential
+        //required
+        [DataMember]
+        public string credentialID { get; set; }
+
+        //The Signature Activation Data to provide as input to the signatures/signHash method.
+        //required
+        [DataMember]
+        public string SAD { get; set; }
+
+
+        //One or more Base64-encoded hash values to be signed
+        [DataMember]
+        public string[] hash { get; set; }
+
+        //"Specifies the OID of the algorithm used to calculate the hash value(s)
+        [DataMember]
+        public string hashAlgo { get; set; }
+
+        //Specifies the OID of the algorithm to use for signing
+        [DataMember]
+        public string signAlgo { get; set; }
+
+        //Specifies the Base64-encoded of DER-encoded ASN.1 signature parameters
+        [DataMember]
+        public string signAlgoParams { get; set; }
+
+        //Arbitrary data from the Signature Application
+        [DataMember]
+        public string clientData { get; set; }
+    }
+
+
+    [DataContract]
+    public class OutputSignaturesSignPDF
+    {
+        //Array of Base64-encoded signed hash
+        //required
+        [DataMember]
+        public string[] signatures { get; set; }
+    }
+
+    /*----------------------------------------------------------------------------------*/
     //Output parameters for info method
     [DataContract]
     public class OutputInfo

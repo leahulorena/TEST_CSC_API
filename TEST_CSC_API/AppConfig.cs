@@ -29,6 +29,7 @@ namespace TEST_CSC_API
         public string Code { get; set; }
     }
 
+
     public interface IWritableOptions<out T> : IOptions<T> where T : class, new()
     {
         void Update(Action<T> applyChanges);
