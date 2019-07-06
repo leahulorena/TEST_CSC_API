@@ -1,0 +1,57 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h3>Sign remote with transsped</h3>
+
+<div class="card">
+    <div class="card-header"><h4>Necessary Info</h4></div>
+    <div class="card-body">
+
+        <form class="md-form">
+            <div class="file-field">
+                <label style="float:left">Choose source file</label>
+                <div class="btn btn-sm float-left">
+                    <input type="file" class="btn btn-block">
+                </div>
+            </div>
+        </form>
+
+        <form class="md-form">
+
+            <div class="file-field">
+                <label style="float:left">Choose destination????</label>
+                <div class="btn btn-sm float-left">
+                    <input type="file" class="btn btn-block">
+                </div>
+            </div>
+        </form>
+
+        <button type="button" id="loadcert">Load Certificates</button>
+
+        <div id="certificates"></div>
+
+        <form class="md-form">
+            <div class="form-row">
+                <button id="requestOTP"></button>
+                <input type="text" maxlength="6" id="otp" name="otp" />
+            </div>
+        </form>
+    </div>
+</div>
+<p>where to save</p>
+
+<p>btn to load certificates (partial view) - choose cert</p>
+<p>on selecting cert - request for otp</p>
+<p>insert otp and pass</p>
+<p>btn sign</p>
+
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script type="text/javascript">
+    $("#loadcert").click(function () {
+        $("#certificates").load("/Sign/_LoadCert");
+    });
+
+    $('#requestOTP')
+</script>

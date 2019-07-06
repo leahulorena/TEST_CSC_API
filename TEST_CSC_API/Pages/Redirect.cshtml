@@ -1,5 +1,9 @@
 ﻿@page
 @model TEST_CSC_API.RedirectModel
 @{
+    var url = TempData["clienturl"];
 }
-<h4>@TempData["test"]</h4>
+
+<h4 style="text-align:center">Authorization completed!</h4>
+
+<a href=@url class="btn btn-default">Return home</a>

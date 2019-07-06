@@ -16,10 +16,12 @@ namespace TEST_CSC_API.Controllers
     public class CredentialsInfoController : ControllerBase
     {
         IConfiguration _configuration;
+        IAccessToken _accessToken;
 
-        public CredentialsInfoController(IConfiguration configuration)
+        public CredentialsInfoController(IConfiguration configuration, IAccessToken accessToken)
         {
             _configuration = configuration;
+            _accessToken = accessToken;
         }
 
         [HttpPost]
@@ -28,25 +30,10 @@ namespace TEST_CSC_API.Controllers
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
-
-            Microsoft.Extensions.Primitives.StringValues value;
-            string access_token = "";
-            if (Request.Headers.TryGetValue("Authorization", out value))
-            {
-                access_token = value.ToString().Replace("Bearer ", "");
-            }
-            else
-            {
-                OutputError error = new OutputError()
-                {
-                    error = "invalid_access_token",
-                    error_description = "Invalid access_token"
-                };
-                return serializer.Serialize(error);
-            }
+            
 
             CredentialsInfoClient credentialsInfoClient = new CredentialsInfoClient(serializer, errorLogger, baseURL);
-            object response = credentialsInfoClient.GetCredentialsInfo(access_token, inputCredentialsInfo);
+            object response = credentialsInfoClient.GetCredentialsInfo(_accessToken.GetAccessToken().access_token, inputCredentialsInfo);
 
             return serializer.Serialize(response);
         }

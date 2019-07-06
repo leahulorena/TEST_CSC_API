@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using System.Web.Cors;
 
 namespace TEST_CSC_API
 {
@@ -21,10 +22,11 @@ namespace TEST_CSC_API
     {
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            Configuration = configuration;            
         }
 
         public IConfiguration Configuration { get; }
+        readonly string MySpecificOrigins = "origin";
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -41,6 +43,14 @@ namespace TEST_CSC_API
             });
 
             services.AddMvc();
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MySpecificOrigins, builder =>
+                {
+                    builder.WithOrigins("http://localhost:64357", "https://msign-test.transsped.ro/https://msign-test.transsped.ro/moa-id-auth/oauth2/auth").AllowAnyHeader().AllowAnyMethod();
+                });
+            });
+            
 
             services.AddAuthentication(options =>
             {
@@ -55,14 +65,14 @@ namespace TEST_CSC_API
                 options.ClientSecret = Configuration["Transsped:ClientSecret"];
                 options.AuthorizationEndpoint = Configuration["Transsped:AuthURL"];
                 options.TokenEndpoint = Configuration["Transsped:TokenURL"];
-                options.CallbackPath = new PathString("/redirect");                
-                //options.CallbackPath = new PathString("/oauth2");
+                options.UserInformationEndpoint = Configuration["Transsped:TokenURL"];
+                options.CallbackPath = new PathString("/redirect");
 
                 options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
                 {
                     OnCreatingTicket = async context =>
                     {
-                        var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                        var request = new HttpRequestMessage(HttpMethod.Get, context.Options.TokenEndpoint);
                         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
 
@@ -74,7 +84,10 @@ namespace TEST_CSC_API
                         context.RunClaimActions(user);
                     }
                 };
-            });          
+            });
+
+            services.AddSingleton<IAccessToken, MyAccessToken>();
+            
  
         }
 
@@ -94,8 +107,9 @@ namespace TEST_CSC_API
                // builder.AddUserSecrets<Startup>();
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors();
             app.UseMvc();
+          
         }
     }
 }

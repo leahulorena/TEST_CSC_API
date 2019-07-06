@@ -143,7 +143,6 @@ namespace TEST_CSC_API
     }
 
 
-
     //Input parameter for auth/revoke method
     [DataContract]
     public class InputAuthRevoke
@@ -425,6 +424,49 @@ namespace TEST_CSC_API
         //required
         [DataMember]
         public string[] signatures { get; set; }
+    }
+
+
+
+    [DataContract]
+    public class InputAuthorizeSignHash
+    {
+        [DataMember]
+        public string credentialsID { get; set; }
+
+        [DataMember]
+        public int numSignatures { get; set; }
+
+
+        [DataMember]
+        public string[] hash { get; set; }
+
+
+        [DataMember]
+        public string PIN { get; set; }
+
+
+        [DataMember]
+        public string OTP { get; set; }
+        
+
+        [DataMember]
+        public string description { get; set; }
+
+        [DataMember]
+        public string SAD { get; set; }
+
+        [DataMember]
+        public string hashAlgo { get; set; }
+        [DataMember]
+        public string signAlgo { get; set; }
+
+
+        [DataMember]
+        public string signAlgoParams { get; set; }
+        
+        [DataMember]
+        public string clientData { get; set; }
     }
 
     /*----------------------------------------------------------------------------------*/

@@ -12,6 +12,32 @@ using System.Threading.Tasks;
 
 namespace TEST_CSC_API
 {
+
+    public interface IAccessToken
+    {
+        void SetAccessToken(string access_token, string token_type, int expires_in);
+        OutputOauth2Token GetAccessToken();
+
+    }
+
+    public class MyAccessToken : IAccessToken
+    {
+        private OutputOauth2Token AccessToken;
+
+        public void SetAccessToken(string access_token, string token_type, int expires_in)
+        {
+            AccessToken = new OutputOauth2Token();
+            AccessToken.access_token = access_token;
+            AccessToken.token_type = token_type;
+            AccessToken.expires_in = expires_in;
+        }
+        public OutputOauth2Token GetAccessToken()
+        {
+            return AccessToken;
+        }
+    }
+
+
     public class Transsped
     {
         public string BaseURL { get; set; }
@@ -25,8 +51,8 @@ namespace TEST_CSC_API
         public string AuthURL { get; set; }
 
         public string TokenURL { get; set; }
-
-        public string Code { get; set; }
+        
+        public string ClientURL { get; set; }
     }
 
 

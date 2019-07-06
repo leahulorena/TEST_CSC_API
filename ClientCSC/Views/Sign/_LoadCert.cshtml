@@ -1,0 +1,37 @@
+﻿@model IEnumerable<ClientCSC.Models.Cert>
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    int i = 0;
+}
+<input type="text" id="serialNo" name="serialNo" hidden/>
+<div class="card">
+    <div class="card-header"><h5>Certificates available</h5></div>
+    <div class="card-body">
+
+        @foreach (var certificate in Model)
+        {
+            <div class="card">
+                <div class="card-header"><button style="float:right" class="btn btn-outline-info" id="select_certificate" onclick="LockCertificate('@certificate.serialNumber')">Use this certificate to sign</button></div>
+                <div class="card-body">
+
+                    <p>Subject Name @certificate.subjectDN</p>
+                    <p>Issuer @certificate.issuerDN</p>
+                    <p>Valid from @certificate.validFrom Valid to @certificate.validTo</p>
+                   
+
+                </div>
+            </div>
+            i++;
+        }
+    </div>
+</div>
+
+
+<script>
+    function LockCertificate(serialNoVal) {
+        $('#serialNo').val(serialNoVal);
+        $('button[id="select_certificate"]').prop('disabled', true);
+    }
+</script>

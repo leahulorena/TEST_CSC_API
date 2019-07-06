@@ -12,9 +12,11 @@ using Microsoft.Win32;
 using RestSharp.Deserializers;
 using RestSharp;
 using TEST_CSC_API.Logic;
+using System.Web.Http.Cors;
 
 namespace TEST_CSC_API.Controllers
 {
+    [EnableCors(origins:"http://localhost:64357", headers:"*", methods:"*")]
     [Route("api/[controller]")]
     [ApiController]
     public class OAuth2Controller : ControllerBase
