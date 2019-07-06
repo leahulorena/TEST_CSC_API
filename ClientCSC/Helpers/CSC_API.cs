@@ -12,10 +12,3 @@ namespace ClientCSC
         public string TokenURL { get; set; }
     }
 }
-
-
- //"BaseURL": "http://localhost:8080/api",
- //   "ClientID": "",
- //   "ClientSecret": "",
- //   "AuthURL": "http://localhost:8080/api/oauth2",
- //   "TokenURL": "http://localhost:8080/api/csc_api/auth"

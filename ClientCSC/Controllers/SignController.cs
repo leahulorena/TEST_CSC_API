@@ -57,10 +57,10 @@ namespace ClientCSC.Controllers
             InputCredentialsList credentialsList = new InputCredentialsList() { };
             MyHttpClient myHttpClient = new MyHttpClient(serializer, errorLogger, baseURL);
             var response = myHttpClient.GetCertificatesList(_accessToken.GetAccessToken().access_token, credentialsList);
-            List<Cert> userCertificates = new List<Cert>();
+            List<CredentialObject> userCertificates = new List<CredentialObject>();
             if (!response.Contains("error"))
             {
-                List<OutputCredentialsInfo> outputCredentials = serializer.Deserialize<List<OutputCredentialsInfo>>(response);
+                List<OutputCredentials> outputCredentials = serializer.Deserialize<List<OutputCredentials>>(response);
                 foreach (var output in outputCredentials)
                 {
                     //trebuie sa adaug si credential id
@@ -73,7 +73,15 @@ namespace ClientCSC.Controllers
                     certificate.status = certTest.FriendlyName.ToString();
                     certificate.validFrom = certTest.NotBefore.ToString();
                     certificate.validTo = certTest.NotAfter.ToString();
-                    userCertificates.Add(certificate);
+
+                    string credID = output.credentialID;
+
+                    CredentialObject userCredentialObject = new CredentialObject();
+                    userCredentialObject.credentialID = credID;
+                    userCredentialObject.certificate = certificate;
+
+                    userCertificates.Add(userCredentialObject);
+                       
                 }
             }
             return PartialView("_LoadCert", userCertificates);
@@ -107,5 +115,9 @@ namespace ClientCSC.Controllers
             return response.Content;
         }
 
+        public void SendOTP(string credentialID)
+        {
+
+        }
     }
 }

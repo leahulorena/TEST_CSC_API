@@ -1,11 +1,11 @@
-﻿@model IEnumerable<ClientCSC.Models.Cert>
+﻿@model IEnumerable<ClientCSC.Models.CredentialObject>
 @*
     For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
     int i = 0;
 }
-<input type="text" id="serialNo" name="serialNo" hidden/>
+<input type="text" id="credentialID" name="credentialID"/>
 <div class="card">
     <div class="card-header"><h5>Certificates available</h5></div>
     <div class="card-body">
@@ -13,12 +13,12 @@
         @foreach (var certificate in Model)
         {
             <div class="card">
-                <div class="card-header"><button style="float:right" class="btn btn-outline-info" id="select_certificate" onclick="LockCertificate('@certificate.serialNumber')">Use this certificate to sign</button></div>
+                <div class="card-header"><button style="float:right" class="btn btn-outline-info" id="select_certificate" onclick="LockCertificate('@certificate.credentialID')">Use this certificate to sign</button></div>
                 <div class="card-body">
-
-                    <p>Subject Name @certificate.subjectDN</p>
-                    <p>Issuer @certificate.issuerDN</p>
-                    <p>Valid from @certificate.validFrom Valid to @certificate.validTo</p>
+                    <p>Credential ID @certificate.credentialID</p>
+                    <p>Subject Name @certificate.certificate.subjectDN</p>
+                    <p>Issuer @certificate.certificate.issuerDN</p>
+                    <p>Valid from @certificate.certificate.validFrom Valid to @certificate.certificate.validTo</p>
                    
 
                 </div>
@@ -30,8 +30,8 @@
 
 
 <script>
-    function LockCertificate(serialNoVal) {
-        $('#serialNo').val(serialNoVal);
+    function LockCertificate(credID) {
+        $('#credentialID').val(credID);
         $('button[id="select_certificate"]').prop('disabled', true);
     }
 </script>

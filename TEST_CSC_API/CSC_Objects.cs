@@ -469,6 +469,59 @@ namespace TEST_CSC_API
         public string clientData { get; set; }
     }
 
+
+
+    [DataContract]
+    public class OutputCredentials
+    {
+        //Contains a free form description of the authorization transaction in the lang language
+        [DataMember]
+        public string credentialID { get; set; }
+
+        [DataMember]
+        public string description { get; set; }
+
+        //Information about the key
+        //required
+        [DataMember]
+        public Key key { get; set; }
+
+        //Contains information about the signature certificate
+        //required
+        [DataMember]
+        public Cert cert { get; set; }
+
+        //Specifies one of the authorization modes 
+        //implicit|explicit|oauth2code|oauth2token
+        //required
+        [DataMember]
+        public string authMode { get; set; }
+
+        //Specifies the Sole Control Assurance Level required by the credential, as defined in CEN EN 419 241-1
+        //required
+        [DataMember]
+        public string SCAL { get; set; }
+
+        //Contains information about the credential's PIN
+        //required
+        [DataMember]
+        public PININFO PIN { get; set; }
+
+        //Contains information about the credential's OTP
+        //required
+        [DataMember]
+        public OTPINFO OTP { get; set; }
+
+        //Specifies if the credential supports multiple signatures to be created with a single authorization request
+        //required
+        [DataMember]
+        public bool multisign { get; set; }
+
+        //Request a preferred language according to RFC 3066
+        //required
+        [DataMember]
+        public string lang { get; set; }
+    }
     /*----------------------------------------------------------------------------------*/
     //Output parameters for info method
     [DataContract]

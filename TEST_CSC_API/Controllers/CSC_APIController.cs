@@ -58,7 +58,8 @@ namespace TEST_CSC_API.Controllers
             object response = credentialsListClient.GetCredentialsList(access_token, inputCredentialsList);
             var credList = serializer.Serialize(response);
             OutputCredentialsList outputCredentialsList = serializer.Deserialize<OutputCredentialsList>(credList);
-            List<OutputCredentialsInfo> userCredInfo = new List<OutputCredentialsInfo>();
+            //List<OutputCredentialsInfo> userCredInfo = new List<OutputCredentialsInfo>();
+            List<OutputCredentials> userCredInfo = new List<OutputCredentials>();
 
             if (outputCredentialsList != null && outputCredentialsList.credentialIDs != null)
             {
@@ -75,7 +76,19 @@ namespace TEST_CSC_API.Controllers
                     if (!credInfoResponse.Contains("error"))
                     {
                         OutputCredentialsInfo outputCredentialsInfo = serializer.Deserialize<OutputCredentialsInfo>(credInfoResponse);
-                        userCredInfo.Add(outputCredentialsInfo);
+                        OutputCredentials tempOutputCred = new OutputCredentials();
+                        tempOutputCred.credentialID = credID;
+                        tempOutputCred.authMode = outputCredentialsInfo.authMode;
+                        tempOutputCred.cert = outputCredentialsInfo.cert;
+                        tempOutputCred.description = outputCredentialsInfo.description;
+                        tempOutputCred.key = outputCredentialsInfo.key;
+                        tempOutputCred.lang = outputCredentialsInfo.lang;
+                        tempOutputCred.multisign = outputCredentialsInfo.multisign;
+                        tempOutputCred.OTP = outputCredentialsInfo.OTP;
+                        tempOutputCred.PIN = outputCredentialsInfo.PIN;
+                        tempOutputCred.SCAL = outputCredentialsInfo.SCAL;
+
+                        userCredInfo.Add(tempOutputCred);
                     }
 
                 }
