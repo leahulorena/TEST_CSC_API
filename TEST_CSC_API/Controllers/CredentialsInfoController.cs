@@ -25,17 +25,17 @@ namespace TEST_CSC_API.Controllers
         }
 
         [HttpPost]
-        public string CredentialsInfo(InputCredentialsInfo inputCredentialsInfo)
+        public object CredentialsInfo(InputCredentialsInfo inputCredentialsInfo)
         {
             JsonSerializer serializer = new JsonSerializer();
             ErrorLogger errorLogger = new ErrorLogger();
             string baseURL = _configuration.GetSection("Transsped").GetSection("BaseURL").Value;
-            
+
 
             CredentialsInfoClient credentialsInfoClient = new CredentialsInfoClient(serializer, errorLogger, baseURL);
             object response = credentialsInfoClient.GetCredentialsInfo(_accessToken.GetAccessToken().access_token, inputCredentialsInfo);
 
-            return serializer.Serialize(response);
+            return response;
         }
 
 
@@ -49,13 +49,13 @@ namespace TEST_CSC_API.Controllers
 
         public object GetCredentialsInfo(string access_token, InputCredentialsInfo inputCredentialsInfo)
         {
-            
+
             RestRequest request = new RestRequest("credentials/info", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
 
             JsonSerializer serializer = new JsonSerializer();
             var postData = serializer.Serialize(inputCredentialsInfo);
-           // var postData = "{ \"credentialID\": \"" + credentialsID + "\",\"certInfo\": \"true\"}";
+            // var postData = "{ \"credentialID\": \"" + credentialsID + "\",\"certInfo\": \"true\"}";
             request.AddJsonBody(postData);
 
             IRestResponse response = Execute(request);

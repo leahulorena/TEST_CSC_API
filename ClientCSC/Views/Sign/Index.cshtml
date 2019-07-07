@@ -1,57 +1,115 @@
-﻿
+﻿@{ Layout = null;}
 @{
     ViewData["Title"] = "Index";
 }
+@model  ClientCSC.Models.SignatureModel
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ClientCSC</title>
 
+    <environment include="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"
+              crossorigin="anonymous"
+              integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" />
+    </environment>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
 <h3>Sign remote with transsped</h3>
+<div class="container">
+    <div class="card">
+        <div class="card-header"><h4>Necessary Info</h4></div>
+        <div class="card-body">
 
-<div class="card">
-    <div class="card-header"><h4>Necessary Info</h4></div>
-    <div class="card-body">
 
-        <form class="md-form">
-            <div class="file-field">
-                <label style="float:left">Choose source file</label>
-                <div class="btn btn-sm float-left">
-                    <input type="file" class="btn btn-block">
+            <form id="myForm" enctype="multipart/form-data" asp-controller="Sign" asp-action="SignData">
+                <div class="form-group">
+                    <label for="inputFile">File to sign</label>
+                    @Html.EditorFor(model => model.inputFile, new { @class = "form-control", @placeholder = "Input file", @required = "required" })
+
                 </div>
-            </div>
-        </form>
+                @*<div class="form-group">
+            <label for="outputFile">Output File</label>
+           @Html.EditorFor(model => model.outputFile, new { @class = "form-control", @placeholder = "Output file" , @required="required"})
+        </div>*@
 
-        <form class="md-form">
 
-            <div class="file-field">
-                <label style="float:left">Choose destination????</label>
-                <div class="btn btn-sm float-left">
-                    <input type="file" class="btn btn-block">
+                <input type="text" id="credentialsID" name="credentialsID" hidden />
+
+                <div class="form-group">
+
+                    <button type="button" class="btn btn-outline-info" id="loadcert">Load Certificates</button>
+
+                    <div id="certificates"></div>
                 </div>
-            </div>
-        </form>
 
-        <button type="button" id="loadcert">Load Certificates</button>
 
-        <div id="certificates"></div>
+                <div class="form-group">
+                    <button type="button" id="requestOTP" class="btn btn-outline-info">Request OTP</button>
+                    <input type="text" id="otp" name="otp" class="form-control" placeholder="OTP" required maxlength="6" />
+                </div>
+                <div class="form-group">
+                    <label for="password">Password for Signing</label>
+                    @Html.PasswordFor(model => model.pin, new { @class = "form-control", @placeholder = "PIN", @type = "password", @required = "required" })
+                </div>
 
-        <form class="md-form">
-            <div class="form-row">
-                <button id="requestOTP"></button>
-                <input type="text" maxlength="6" id="otp" name="otp" />
-            </div>
-        </form>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="radio" class="form-check-input" name="algorithm" value="1" required>SHA256 - RSA
+                    </label>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="radio" class="form-check-input" name="algorithm" value="2">SHA1 - RSA
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="sign">Sign</button>
+            </form>
+        </div>
     </div>
 </div>
-<p>where to save</p>
 
-<p>btn to load certificates (partial view) - choose cert</p>
-<p>on selecting cert - request for otp</p>
-<p>insert otp and pass</p>
-<p>btn sign</p>
 
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script type="text/javascript">
-    $("#loadcert").click(function () {
-        $("#certificates").load("/Sign/_LoadCert");
-    });
+    $(document).ready(function () {
+       
+        $("#loadcert").click(function () {
+            $("#certificates").load("/Sign/_LoadCert");
+        });
 
-    $('#requestOTP')
+        $('#requestOTP').click(function () {
+            debugger;
+            var credentialsID = $('#credentialsID').val();
+            if (credentialsID = "" || credentialsID == null) {
+                alert("Choose certificate!");
+                return;
+            } else {
+                $.ajax({
+                    url: "/Sign/SendOTP",
+                    data: { credentialID: $('#credentialsID').val() },
+                    type: 'GET',
+                    success: function (result) {
+                        if (result == "ok") {
+                            alert("An OTP was sent to your phone! Insert your OTP here!")
+                        } else {
+                            "Try again!"
+                        }
+                    }
+                })
+            }
+
+        });
+
+    });
+     function LockCertificate(credID) {
+        $('#credentialsID').val(credID);
+        $('button[id="select_certificate"]').prop('disabled', true);
+    }
 </script>

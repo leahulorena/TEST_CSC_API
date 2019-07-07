@@ -5,7 +5,8 @@
 @{
     int i = 0;
 }
-<input type="text" id="credentialID" name="credentialID"/>
+
+
 <div class="card">
     <div class="card-header"><h5>Certificates available</h5></div>
     <div class="card-body">
@@ -27,11 +28,3 @@
         }
     </div>
 </div>
-
-
-<script>
-    function LockCertificate(credID) {
-        $('#credentialID').val(credID);
-        $('button[id="select_certificate"]').prop('disabled', true);
-    }
-</script>
