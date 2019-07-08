@@ -101,7 +101,7 @@ namespace ClientCSC.Controllers
 
             MyHttpClient myHttpClient = new MyHttpClient(serializer, errorLogger, baseURL);
             var response = myHttpClient.SendOTP(_accessToken.GetAccessToken().access_token, credentialsSendOTP);
-            if (response != null)
+            if (response == null || response.Contains("error"))
             {
                 return "fail";
             }
@@ -113,7 +113,7 @@ namespace ClientCSC.Controllers
 
 
         //in functie de ce tip de fisier mi se incarca sa fac diferentierea intre PAdES si XAdES
-        public async Task<IActionResult> SignData(SignatureModel data)
+        public async Task<IActionResult> SignData(SignatureModel data, int? cades)
         {
             try
             {
@@ -129,76 +129,86 @@ namespace ClientCSC.Controllers
 
                         //sha256 \"signAlgo\": \"1.2.840.113549.1.1.11\", \"hashAlgo\": \"2.16.840.1.101.3.4.2.1\"
                         //sha1 \"signAlgo\": \"1.3.14.3.2.29\", \"hashAlgo\": \"1.3.14.3.2.26\
-
-                        //teoretic ar cam trebui sa intorc streamul, sa vad daca reusesc asa
-                        if (data.inputFile.ContentType == "application/pdf")
+                        if (cades == 1)
                         {
-                            if (data.algorithm == 1)
+                            MemoryStream memory = SBBSignCMS(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+                            if (memory != null)
                             {
-                                flag = SBBSignPDF(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-                                // flag = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
-                            }
-                            else
-                            {
-                                flag = SBBSignPDF(stream, data.credentialsID, "1.3.14.3.2.26", "1.3.14.3.2.29", data.otp, data.pin);
-                                //flag = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
-                            }
-                            //sa nu uitam de access token !
-                            stream.Close();
-                            stream.Dispose();
-                        }
-                        else if (data.inputFile.ContentType == "text/xml")
-                        {
-                            if (data.algorithm == 1)
-                            {
-
-                                memoryxml = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
-                            }
-                            else
-                            {
-
-                                memoryxml = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
+                                memory.Position = 0;
+                                return File(memory, "application/pkcs7-signature", "test.p7s");
                             }
                         }
-
-                        if (flag == true)
+                        else
                         {
-                            var memory = new MemoryStream();
-
-                            using (FileStream signedStrem = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                            if (data.inputFile.ContentType == "application/pdf")
                             {
-                                //return File(signedStrem, "application/octet-stream");
-                                await signedStrem.CopyToAsync(memory);
-                            }
-                            memory.Position = 0;
-                            //text/xml, ceva signed.xml
-                            return File(memory, "application/pdf", "lorena-signed.pdf");
-                        }
+                                if (data.algorithm == 1)
+                                {
+                                    flag = SBBSignPDF(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+                                    // flag = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
 
-                        if(memoryxml != null)
-                        {
-                            //using (FileStream signedStrem = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                            //{
-                            //    //return File(signedStrem, "application/octet-stream");
-                            //    await signedStrem.CopyToAsync(memoryxml);
-                            //}
-                            memoryxml.Position = 0;
-                            //text/xml, ceva signed.xml
-                            return File(memoryxml, "text/xml", "lorena-signed.xml");
+                                }
+                                else
+                                {
+                                    flag = SBBSignPDF(stream, data.credentialsID, "1.3.14.3.2.26", "1.3.14.3.2.29", data.otp, data.pin);
+                                    //flag = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+
+                                }
+                                //sa nu uitam de access token !
+                                stream.Close();
+                                stream.Dispose();
+                            }
+                            else if (data.inputFile.ContentType == "text/xml")
+                            {
+                                if (data.algorithm == 1)
+                                {
+
+                                    memoryxml = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+
+                                }
+                                else
+                                {
+
+                                    memoryxml = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+
+                                }
+                            }
+
+                            if (flag == true)
+                            {
+                                var memory = new MemoryStream();
+
+                                using (FileStream signedStrem = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                                {
+                                    //return File(signedStrem, "application/octet-stream");
+                                    await signedStrem.CopyToAsync(memory);
+                                }
+                                memory.Position = 0;
+                                //text/xml, ceva signed.xml
+                                return File(memory, "application/pdf", "lorena-signed.pdf");
+                            }
+
+                            if (memoryxml != null)
+                            {
+                                //using (FileStream signedStrem = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                                //{
+                                //    //return File(signedStrem, "application/octet-stream");
+                                //    await signedStrem.CopyToAsync(memoryxml);
+                                //}
+                                memoryxml.Position = 0;
+                                //text/xml, ceva signed.xml
+                                return File(memoryxml, "text/xml", "lorena-signed.xml");
+                            }
                         }
                     }
 
                 }
 
 
-                else { return null; }
-                return null;
+                else { return RedirectToAction("Index"); }
+                return RedirectToAction("Index");
             }
-            catch (Exception ex) { return null; }
+            catch (Exception ex) { return RedirectToAction("Index"); }
         }
 
         public bool SBBSignPDF(Stream fileStream, string credentialsID, string hashAlgo, string signAlgo, string otp, string pin)
@@ -212,6 +222,13 @@ namespace ClientCSC.Controllers
         {
             XAdES_Signer xAdES_Signer = new XAdES_Signer();
             MemoryStream memory = xAdES_Signer.SignXML(fileStream, _accessToken.GetAccessToken().access_token, otp, pin, credentialsID, _configuration.GetSection("CSC_API").GetSection("BaseURL").Value, hashAlgo, signAlgo);
+            return memory;
+        }
+
+        public MemoryStream SBBSignCMS(Stream fileStream, string credentialsID, string hashAlgo, string signAlgo, string otp, string pin)
+        {
+            CAdES_Signer cAdES_Signer = new CAdES_Signer();
+            MemoryStream memory = cAdES_Signer.SignCMS(fileStream, _accessToken.GetAccessToken().access_token, otp, pin, credentialsID, _configuration.GetSection("CSC_API").GetSection("BaseURL").Value, hashAlgo, signAlgo);
             return memory;
         }
     }

@@ -26,17 +26,17 @@ namespace TEST_CSC_API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostFile([FromForm]IFormFile file, [FromForm]string OTP, [FromForm]string pin)
+        public async Task<Stream> PostFile([FromForm]IFormFile file, [FromForm]string OTP, [FromForm]string pin)
         {
 
-
-            var uploads = Path.Combine(_hostingEnvironment.ContentRootPath, "Documents");
-            var filePath = Path.Combine(uploads, file.FileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+           
+            //var uploads = Path.Combine(_hostingEnvironment.ContentRootPath, "Documents");
+            var filePath = Path.GetTempFileName();
+            if(file.Length > 0)
             {
-                file.CopyToAsync(fileStream).Wait();
-
-             
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
 
                 Microsoft.Extensions.Primitives.StringValues value;
                 string access_token = "";
@@ -55,10 +55,9 @@ namespace TEST_CSC_API.Controllers
                 }
 
                 PDFSignature pdfSign = new PDFSignature();
-                pdfSign.SignFilePDF(fileStream, access_token, OTP, pin);
+                pdfSign.SignFilePDF(stream, access_token, OTP, pin);
 
-                //imi salveaza documentul local
-                //trebuie sa vad cum trimit documentul inapoi la user
+               
 
             }
             //System.IO.File.Copy(file.Name, @"E:\Dezvoltare\test.pdf", true);

@@ -20,10 +20,9 @@
     </environment>
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
-<h3>Sign remote with transsped</h3>
 <div class="container">
     <div class="card">
-        <div class="card-header"><h4>Necessary Info</h4></div>
+        <div class="card-header"><h4>Sign remote with Transsped</h4></div>
         <div class="card-body">
 
 
@@ -33,10 +32,6 @@
                     @Html.EditorFor(model => model.inputFile, new { @class = "form-control", @placeholder = "Input file", @required = "required" })
 
                 </div>
-                @*<div class="form-group">
-            <label for="outputFile">Output File</label>
-           @Html.EditorFor(model => model.outputFile, new { @class = "form-control", @placeholder = "Output file" , @required="required"})
-        </div>*@
 
 
                 <input type="text" id="credentialsID" name="credentialsID" hidden />
@@ -68,6 +63,11 @@
                         <input type="radio" class="form-check-input" name="algorithm" value="2">SHA1 - RSA
                     </label>
                 </div>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="cades" value="1" />CMS Advanced Signature
+                    </label>
+                </div>
 
                 <button type="submit" class="btn btn-primary" id="sign">Sign</button>
             </form>
@@ -87,7 +87,7 @@
         $('#requestOTP').click(function () {
             debugger;
             var credentialsID = $('#credentialsID').val();
-            if (credentialsID = "" || credentialsID == null) {
+            if (credentialsID = "" || credentialsID == null || credentialsID == false) {
                 alert("Choose certificate!");
                 return;
             } else {
