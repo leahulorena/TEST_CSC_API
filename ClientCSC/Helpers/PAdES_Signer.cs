@@ -49,7 +49,14 @@ namespace ClientCSC.Helpers
                     handler.IgnoreChainValidationErrors = true;
                     handler.CertStorage = LoadCertificate(credentialsID, access_token);
                     handler.PAdESSignatureType = TSBPAdESSignatureType.pastEnhanced;
-                    handler.HashAlgorithm = SBConstants.__Global.SB_ALGORITHM_DGST_SHA256;
+                    if (hashAlgo == "2.16.840.1.101.3.4.2.1")
+                    {
+                        handler.HashAlgorithm = SBConstants.__Global.SB_ALGORITHM_DGST_SHA256;
+                    }
+                    else
+                    {
+                        handler.HashAlgorithm = SBConstants.__Global.SB_ALGORITHM_DGST_SHA1;
+                    }
                     handler.RemoteSigningMode = true;
                     handler.RemoteSigningCertIndex = 0;
                     handler.SignatureType = TSBPDFPublicKeySignatureType.pstPKCS7SHA1;
@@ -61,7 +68,6 @@ namespace ClientCSC.Helpers
                     document.Close(true);
 
                     return true;
-                    //pe document.close se salveaza fisierul in temp path. ar trebui sa citesc iar streamul de acolo si sa il returnez
                 }
                 catch(Exception ex) { return false; }
             }

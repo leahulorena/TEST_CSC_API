@@ -11,6 +11,7 @@ using ClientCSC.Helpers;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using System.Text;
 
 namespace ClientCSC.Controllers
 {
@@ -111,95 +112,172 @@ namespace ClientCSC.Controllers
             }
         }
 
-
-        //in functie de ce tip de fisier mi se incarca sa fac diferentierea intre PAdES si XAdES
         public async Task<IActionResult> SignData(SignatureModel data, int? cades)
         {
             try
             {
-                bool flag = false;
-                MemoryStream memoryxml = new MemoryStream();
 
                 var filePath = Path.GetTempFileName();
                 if (data.inputFile.Length > 0)
                 {
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
+                        //METODELE DE SEMNARE DIN API
                         await data.inputFile.CopyToAsync(stream);
 
-                        //sha256 \"signAlgo\": \"1.2.840.113549.1.1.11\", \"hashAlgo\": \"2.16.840.1.101.3.4.2.1\"
-                        //sha1 \"signAlgo\": \"1.3.14.3.2.29\", \"hashAlgo\": \"1.3.14.3.2.26\
-                        if (cades == 1)
+                        MemoryStream memoryStream = new MemoryStream();
+                        await data.inputFile.CopyToAsync(memoryStream);
+                        string hash_algorithm = ""; string sign_algorithm = ""; int signature_type;
+                        if(data.algorithm == 1)
                         {
-                            MemoryStream memory = SBBSignCMS(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-                            if (memory != null)
-                            {
-                                memory.Position = 0;
-                                return File(memory, "application/pkcs7-signature", "test.p7s");
-                            }
+                            hash_algorithm = "2.16.840.1.101.3.4.2.1";
+                            sign_algorithm = "1.2.840.113549.1.1.11";
                         }
                         else
                         {
-                            if (data.inputFile.ContentType == "application/pdf")
-                            {
-                                if (data.algorithm == 1)
-                                {
-                                    flag = SBBSignPDF(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-                                    // flag = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
-                                }
-                                else
-                                {
-                                    flag = SBBSignPDF(stream, data.credentialsID, "1.3.14.3.2.26", "1.3.14.3.2.29", data.otp, data.pin);
-                                    //flag = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
-                                }
-                                //sa nu uitam de access token !
-                                stream.Close();
-                                stream.Dispose();
-                            }
-                            else if (data.inputFile.ContentType == "text/xml")
-                            {
-                                if (data.algorithm == 1)
-                                {
-
-                                    memoryxml = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
-                                }
-                                else
-                                {
-
-                                    memoryxml = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
-
-                                }
-                            }
-
-                            if (flag == true)
-                            {
-                                var memory = new MemoryStream();
-
-                                using (FileStream signedStrem = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                                {
-                                    //return File(signedStrem, "application/octet-stream");
-                                    await signedStrem.CopyToAsync(memory);
-                                }
-                                memory.Position = 0;
-                                //text/xml, ceva signed.xml
-                                return File(memory, "application/pdf", "lorena-signed.pdf");
-                            }
-
-                            if (memoryxml != null)
-                            {
-                                //using (FileStream signedStrem = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                                //{
-                                //    //return File(signedStrem, "application/octet-stream");
-                                //    await signedStrem.CopyToAsync(memoryxml);
-                                //}
-                                memoryxml.Position = 0;
-                                //text/xml, ceva signed.xml
-                                return File(memoryxml, "text/xml", "lorena-signed.xml");
-                            }
+                            hash_algorithm = "1.3.14.3.2.26";
+                            sign_algorithm = "1.3.14.3.2.29";
                         }
+                        if (data.inputFile.ContentType == "application/pdf")
+                        {
+                            signature_type = 1;
+                        }
+                        else if(data.inputFile.ContentType == "text/xml")
+                        {
+                            signature_type = 2;
+                        }
+                        else
+                        {
+                            signature_type = 3;
+                        }
+
+                        if(cades == 1)
+                        {
+                            signature_type = 3;
+                        }
+                        InputSignatureAdvanced inputSignatureAdvanced = new InputSignatureAdvanced()
+                        {
+                            credentialsID = data.credentialsID,
+                            hashAlgo = hash_algorithm,
+                            signAlgo = sign_algorithm,
+                            OTP = data.otp,
+                            PIN = data.pin,
+                            signatureType = signature_type,
+                            documentStream = memoryStream.GetBuffer()
+
+                        };
+                        var ceva = Encoding.UTF8.GetBytes(memoryStream.GetBuffer().ToString());
+                        JsonSerializer serializer = new JsonSerializer();
+                        ErrorLogger errorLogger = new ErrorLogger();
+                        string baseURL = _configuration.GetSection("CSC_API").GetSection("BaseURL").Value;
+
+                        MyHttpClient myHttpClient = new MyHttpClient(serializer, errorLogger, baseURL);
+                        var response = myHttpClient.PAdES(_accessToken.GetAccessToken().access_token, inputSignatureAdvanced);
+                        if (response == null || response.Contains("error"))
+                        {
+                            return RedirectToAction("Index");
+                        }
+                        else
+                        {
+                            //eu primesc byte array
+                            OutputAdvancedSignature output = serializer.Deserialize<OutputAdvancedSignature>(response);
+
+                            MemoryStream signedMemory = new MemoryStream(output.signedDocument);
+
+                            signedMemory.Position = 0;
+                            if (signature_type == 1)
+                            {
+                                return File(signedMemory, "application/pdf", "signed-pdf.pdf");
+                            }
+                            else if (signature_type == 2)
+                            {
+                                return File(signedMemory, "text/xml", "signed-xml.xml");
+                            }
+                            else
+                            {
+                                return File(signedMemory, "application/pkcs7-signature", "signed-cms.p7s");
+                            }
+
+
+                        }
+                        //METODELE DE SEMNARE DIN CLIENT
+
+                        // bool flag = false;
+                        // MemoryStream memoryxml = new MemoryStream();
+                        //if (cades == 1)
+                        //{
+                        //    MemoryStream memory = new MemoryStream();
+                        //    if (data.algorithm == 1)
+                        //    {
+                        //        //SHA256 RSA
+                        //        memory = SBBSignCMS(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+
+                        //    }
+                        //    else
+                        //    {
+                        //        //SHA1 RSA
+                        //        memory = SBBSignCMS(stream, data.credentialsID, "1.3.14.3.2.26", "1.3.14.3.2.29", data.otp, data.pin);
+                        //    }
+                        //    if (memory != null)
+                        //    {
+                        //        memory.Position = 0;
+                        //        return File(memory, "application/pkcs7-signature", "test.p7s");
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    if (data.inputFile.ContentType == "application/pdf")
+                        //    {
+                        //        if (data.algorithm == 1)
+                        //        {
+                        //            //SHA256 RSA
+                        //            flag = SBBSignPDF(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+
+                        //        }
+                        //        else
+                        //        {
+                        //            //SHA1 RSA
+                        //            flag = SBBSignPDF(stream, data.credentialsID, "1.3.14.3.2.26", "1.3.14.3.2.29", data.otp, data.pin);
+
+                        //        }
+                        //        stream.Close();
+                        //        stream.Dispose();
+                        //    }
+                        //    else if (data.inputFile.ContentType == "text/xml")
+                        //    {
+                        //        if (data.algorithm == 1)
+                        //        {
+                        //            //SHA
+                        //            memoryxml = SBBSignXML(stream, data.credentialsID, "2.16.840.1.101.3.4.2.1", "1.2.840.113549.1.1.11", data.otp, data.pin);
+
+                        //        }
+                        //        else
+                        //        {
+
+                        //            memoryxml = SBBSignXML(stream, data.credentialsID, "1.3.14.3.2.26", "1.3.14.3.2.29", data.otp, data.pin);
+
+                        //        }
+                        //    }
+
+                        //    if (flag == true)
+                        //    {
+                        //        var memory = new MemoryStream();
+
+                        //        using (FileStream signedStrem = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                        //        {
+                        //            await signedStrem.CopyToAsync(memory);
+                        //        }
+                        //        memory.Position = 0;
+                        //        return File(memory, "application/pdf", "lorena-signed.pdf");
+                        //    }
+
+                        //    if (memoryxml != null)
+                        //    {
+
+                        //        memoryxml.Position = 0;
+                        //        return File(memoryxml, "text/xml", "lorena-signed.xml");
+                        //    }
+                        //}
                     }
 
                 }
@@ -242,7 +320,7 @@ namespace ClientCSC.Controllers
         public string GetAccessToken()
 
         {
-            RestRequest request = new RestRequest("auth", Method.GET);
+            RestRequest request = new RestRequest("csc_api/auth", Method.GET);
             IRestResponse response = Execute(request);
             return response.Content;
         }
@@ -250,7 +328,7 @@ namespace ClientCSC.Controllers
 
         public string GetCertificatesList(string access_token, InputCredentialsList inputCredentialsList)
         {
-            RestRequest request = new RestRequest("credentials", Method.POST);
+            RestRequest request = new RestRequest("csc_api/credentials", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
             JsonSerializer serializer = new JsonSerializer();
             var postData = serializer.Serialize(inputCredentialsList);
@@ -262,7 +340,7 @@ namespace ClientCSC.Controllers
 
         public string SendOTP(string access_token, InputCredentialsSendOTP sendOTP)
         {
-            RestRequest request = new RestRequest("otp", Method.POST);
+            RestRequest request = new RestRequest("csc_api/otp", Method.POST);
             request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
             JsonSerializer serializer = new JsonSerializer();
             var postData = serializer.Serialize(sendOTP);
@@ -272,6 +350,16 @@ namespace ClientCSC.Controllers
             return response.Content;
         }
 
+        public string PAdES(string access_token, InputSignatureAdvanced inputSignatureAdvanced)
+        {
+            RestRequest request = new RestRequest("advancedsign", Method.POST);
+            request.AddParameter("Authorization", "Bearer " + access_token, ParameterType.HttpHeader);
+            JsonSerializer serializer = new JsonSerializer();
+            var postData = serializer.Serialize(inputSignatureAdvanced);
+            request.AddJsonBody(postData);
 
+            IRestResponse response = Execute(request);
+            return response.Content;
+        }
     }
 }

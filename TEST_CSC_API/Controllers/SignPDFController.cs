@@ -26,51 +26,51 @@ namespace TEST_CSC_API.Controllers
         }
 
         [HttpPost]
-        public async Task<Stream> PostFile([FromForm]IFormFile file, [FromForm]string OTP, [FromForm]string pin)
+        public async Task<IActionResult> PostFile([FromForm]IFormFile file, [FromForm]string OTP, [FromForm]string pin)
         {
 
-           
+
             //var uploads = Path.Combine(_hostingEnvironment.ContentRootPath, "Documents");
             var filePath = Path.GetTempFileName();
-            if(file.Length > 0)
+            if (file.Length > 0)
             {
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
 
-                Microsoft.Extensions.Primitives.StringValues value;
-                string access_token = "";
-                if (Request.Headers.TryGetValue("Authorization", out value))
-                {
-                    access_token = value.ToString().Replace("Bearer ", "");
-                }
-                else
-                {
-                    OutputError error = new OutputError()
+                    Microsoft.Extensions.Primitives.StringValues value;
+                    string access_token = "";
+                    if (Request.Headers.TryGetValue("Authorization", out value))
                     {
-                        error = "invalid_access_token",
-                        error_description = "Invalid access_token"
-                    };
+                        access_token = value.ToString().Replace("Bearer ", "");
+                    }
+                    else
+                    {
+                        OutputError error = new OutputError()
+                        {
+                            error = "invalid_access_token",
+                            error_description = "Invalid access_token"
+                        };
+
+                    }
+
+                    PDFSignature pdfSign = new PDFSignature();
+                    pdfSign.SignFilePDF(stream, access_token, OTP, pin);
+
+
 
                 }
+                //System.IO.File.Copy(file.Name, @"E:\Dezvoltare\test.pdf", true);
 
-                PDFSignature pdfSign = new PDFSignature();
-                pdfSign.SignFilePDF(stream, access_token, OTP, pin);
+                //System.IO.FileStream F = new FileStream(@"E:\Dezvoltare\test.pdf", FileMode.Open, FileAccess.ReadWrite);
+                //try()
+                //var stream = file.OpenReadStream();
+                //var name = file.FileName;
+                //var type = file.ContentType;
 
-               
-
+                return null;
             }
-            //System.IO.File.Copy(file.Name, @"E:\Dezvoltare\test.pdf", true);
-
-            //System.IO.FileStream F = new FileStream(@"E:\Dezvoltare\test.pdf", FileMode.Open, FileAccess.ReadWrite);
-            //try()
-            //var stream = file.OpenReadStream();
-            //var name = file.FileName;
-            //var type = file.ContentType;
-           
             return null;
         }
-
     }
-
 }

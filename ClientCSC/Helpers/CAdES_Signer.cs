@@ -44,7 +44,15 @@ namespace ClientCSC.Helpers
                 
                 TElX509Certificate certificate = LoadCertificate(credentialsID, access_token);
 
-                signature.DigestAlgorithm = SBConstants.Unit.SB_ALGORITHM_DGST_SHA256;
+                if (hashAlgo == "2.16.840.1.101.3.4.2.1")
+                {
+                    signature.DigestAlgorithm = SBConstants.Unit.SB_ALGORITHM_DGST_SHA256;
+                }
+                else
+                {
+                    signature.DigestAlgorithm = SBConstants.Unit.SB_ALGORITHM_DGST_SHA1;
+                }
+              
                 signature.SigningOptions = SBCMS.__Global.csoInsertMessageDigests |
                                            SBCMS.__Global.csoIncludeCertToAttributes |
                                            SBCMS.__Global.csoIncludeCertToMessage |

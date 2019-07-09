@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.SignalR;
 using ClientCSC.Helpers;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace ClientCSC
 {
@@ -47,6 +48,17 @@ namespace ClientCSC
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddSingleton<IAccessToken, MyAccessToken>();
+            services.Configure<FormOptions>(options =>
+
+            {
+
+                options.ValueLengthLimit = int.MaxValue;
+
+                options.MultipartBodyLengthLimit = int.MaxValue;
+
+                options.MultipartHeadersLengthLimit = int.MaxValue;
+
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

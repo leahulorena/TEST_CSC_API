@@ -469,6 +469,42 @@ namespace ClientCSC.Models
         public string clientData { get; set; }
     }
 
+
+    [DataContract]
+    public class InputSignatureAdvanced
+    {
+        [DataMember]
+        public byte[] documentStream { get; set; } //required
+
+        [DataMember]
+        public string credentialsID { get; set; } //required
+
+        [DataMember]
+        public int signatureType { get; set; } //PDF=1, XML=2, CMS=3 required
+        [DataMember]
+        public string PIN { get; set; } //required
+
+        [DataMember]
+        public string OTP { get; set; } //required
+
+        [DataMember]
+        public string hashAlgo { get; set; } //required
+
+        [DataMember]
+        public string signAlgo { get; set; } //required
+
+        [DataMember]
+        public string clientData { get; set; } //optional
+
+    }
+
+
+    [DataContract]
+    public class OutputAdvancedSignature
+    {
+        [DataMember]
+        public byte[] signedDocument { get; set; }
+    }
     /*----------------------------------------------------------------------------------*/
     //Output parameters for info method
     [DataContract]

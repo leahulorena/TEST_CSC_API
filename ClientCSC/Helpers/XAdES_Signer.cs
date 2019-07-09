@@ -49,13 +49,26 @@ namespace ClientCSC.Helpers
                     Signer.SignatureType = SBXMLSec.Unit.xstEnveloped;
                     Signer.CanonicalizationMethod = SBXMLDefs.Unit.xcmCanon;
                     Signer.SignatureMethodType = SBXMLSec.Unit.xmtSig;
-                    Signer.SignatureMethod = SBXMLSec.Unit.xsmRSA_SHA256;
 
                     TElXMLReference Ref = new TElXMLReference();
-                    Ref.DigestMethod = SBXMLSec.Unit.xdmSHA256;
+
                     Ref.URI = "";
                     Ref.URINode = document.DocumentElement;
                     Ref.TransformChain.AddEnvelopedSignatureTransform();
+
+                    if (hashAlgo == "2.16.840.1.101.3.4.2.1")
+                    {
+
+                        Signer.SignatureMethod = SBXMLSec.Unit.xsmRSA_SHA256;
+                        Ref.DigestMethod = SBXMLSec.Unit.xdmSHA256;
+                    }
+                    else
+                    {
+
+                        Signer.SignatureMethod = SBXMLSec.Unit.xsmRSA_SHA1;
+                        Ref.DigestMethod = SBXMLSec.Unit.xdmSHA1;
+                    }
+
                     Signer.References.Add(Ref);
 
                     TElX509Certificate Cert = LoadCertificate(credentialsID, access_token);
@@ -65,8 +78,12 @@ namespace ClientCSC.Helpers
                     Signer.UpdateReferencesDigest();
                     Signer.OnRemoteSign += new TSBXMLRemoteSignEvent(XAdESHandler_OnRemoteSign);
                     Signer.GenerateSignature();
-                   
-                    Signer.SaveEnveloped(document.DocumentElement);
+                    TElXMLDOMNode node = document.ChildNodes.get_Item(0);
+
+                     Signer.SaveEnveloped(document.DocumentElement);
+                  
+                    // Signer.SaveEnveloping(node);
+                   // Signer.SaveDetached(); - semnatura se salveaza separat
 
                   
 
@@ -80,7 +97,6 @@ namespace ClientCSC.Helpers
                     Signer.Dispose();
                     X509Data.Dispose();
                 }
-                return memory;
             }
             catch (Exception ex) { return memory; }
         }
