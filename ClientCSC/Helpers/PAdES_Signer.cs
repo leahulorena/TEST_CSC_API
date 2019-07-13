@@ -57,6 +57,7 @@ namespace ClientCSC.Helpers
                     {
                         handler.HashAlgorithm = SBConstants.__Global.SB_ALGORITHM_DGST_SHA1;
                     }
+                    
                     handler.RemoteSigningMode = true;
                     handler.RemoteSigningCertIndex = 0;
                     handler.SignatureType = TSBPDFPublicKeySignatureType.pstPKCS7SHA1;
